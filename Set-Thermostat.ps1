@@ -12,6 +12,46 @@ function Set-Thermostat
         [Int32]$EndHeatSetpoint,
         [Int32]$EndCoolSetpoint
     )
+    if(!("Json.Deserialize" -as [type]))
+    {
+        if(Test-Path -Path "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0.nupkg")
+        {
+            Remove-Item -Path "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0.nupkg"
+        }
+        if(Test-Path -Path "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0")
+        {
+            Remove-Item -Recurse -Force "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0"
+        }
+        if(Test-Path -Path "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0.zip")
+        {
+            Remove-Item -Path "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0.zip"
+        }
+        [System.Net.WebClient]::new().DownloadFile(
+            "https://globalcdn.nuget.org/packages/microsoft.codedom.providers.dotnetcompilerplatform.3.6.0.nupkg",
+            "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0.nupkg"
+        )
+        Move-Item "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0.nupkg" "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0.zip"
+        Expand-Archive -Path "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0.zip" -DestinationPath "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0"
+        Add-Type -Path "$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll"
+        Invoke-Expression -Command "class RoslynCompilerSettings : Microsoft.CodeDom.Providers.DotNetCompilerPlatform.ICompilerSettings`n{`n    [string] get_CompilerFullPath()`n    {`n        return `"$($ENV:TEMP)\microsoft.codedom.providers.dotnetcompilerplatform.3.6.0\tools\Roslyn472\csc.exe`"`n    }`n    [int] get_CompilerServerTimeToLive()`n    {`n        return 10`n    }`n}"
+        $DotNetCodeDomProvider = [Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider]::new([RoslynCompilerSettings]::new())
+        Add-Type -CodeDomProvider $DotNetCodeDomProvider -TypeDefinition (irm "https://raw.githubusercontent.com/nstevens1040/Json.Deserializer/master/Json.Deserializer/Deserialize.cs") `
+        -ReferencedAssemblies @(
+            [Microsoft.CSharp.RuntimeBinder.Binder].Assembly.Location,
+            [System.Management.Automation.Internal.AutomationNull].Assembly.Location,
+            [System.Web.Script.Serialization.JavaScriptSerializer].Assembly.Location
+        )
+    }
+    if(!("Execute.HttpRequest" -as [type]))
+    {
+        Add-Type -TypeDefinition (irm "https://raw.githubusercontent.com/nstevens1040/Execute.HttpRequest/master/Execute.HttpRequest/Execute.HttpRequest.cs") `
+        -ReferencedAssemblies @(
+            "C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Net.Http\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Net.Http.dll",
+            "C:\Program Files (x86)\Microsoft.NET\Primary Interop Assemblies\Microsoft.mshtml.dll",
+            [Microsoft.CSharp.RuntimeBinder.Binder].Assembly.Location,
+            "C:\WINDOWS\Microsoft.Net\assembly\GAC_64\System.Web\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Web.dll"
+        )
+    }
     $HWAPIKEY = [System.Environment]::GetEnvironmentVariable("HWAPIKEY")
     $HWCALLBACK = [System.Environment]::GetEnvironmentVariable("HWCALLBACK")
     $HWDEVICE = [System.Environment]::GetEnvironmentVariable("HWDEVICE")
