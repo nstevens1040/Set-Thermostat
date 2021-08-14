@@ -20,4 +20,13 @@ In order to use this script, you must have these environment variables set. Thes
    - HWPASS = Your **URLEncoded** password to login to [https://developer.honeywellhome.com/](https://developer.honeywellhome.com/)
    - HWUSER = Your **URLEncoded** username (email address) to login to [https://developer.honeywellhome.com/](https://developer.honeywellhome.com/)  
 
-
+## Installation  
+Load the script into your current Windows PowerShell session.  
+```ps1
+iex (irm "https://raw.githubusercontent.com/nstevens1040/Set-Thermostat/main/Set-Thermostat.ps1")
+```  
+## Usage
+### example  
+```ps1
+Set-Thermostat -CoolSetpoint 69
+```  
