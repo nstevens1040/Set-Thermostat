@@ -12,7 +12,7 @@ This script is for Windows PowerShell and will not work on PowerShell Core.
 |WSManStackVersion|3.0            |  
   
 ## Environment Variables  
-In order to use this script, you must have these environment variables set. These values are availabe once you register on [Honeywell Home Developer](https://developer.honeywellhome.com/user/register)  
+In order to use this script, you must have these environment variables set. These values are availabe once you register with [Honeywell Home Developer](https://developer.honeywellhome.com/user/register)  
    - HWAPIKEY = Consumer Key that you are given once you register an app.
    - HWCALLBACK = The **URLEncoded** callback url that you set when you register an app.
    - HWDEVICE = Your thermostat's device id. Nomenclature is LCC-{Non colon separated thermostat MAC address}.
