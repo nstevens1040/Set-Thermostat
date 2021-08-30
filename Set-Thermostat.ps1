@@ -10,7 +10,9 @@ function Set-Thermostat
         [string]$ThermostatSetpointStatus,
         [string]$NextPeriodTime,
         [Int32]$EndHeatSetpoint,
-        [Int32]$EndCoolSetpoint
+        [Int32]$EndCoolSetpoint,
+        [ValidateSet("On","Auto","Circulate")]
+        [string]$Fan
     )
     if(!("Json.Deserialize" -as [type]))
     {
@@ -99,7 +101,9 @@ function Set-Thermostat
         $r2.ResponseText
     }
     Add-Type -TypeDefinition "namespace Thermostat`n{`n    using System;`n    public class Settings`n    {`n        public string mode`n        {`n            get;`n            set;`n        }`n        public Int32 heatSetpoint`n        {`n            get;`n            set;`n        }`n        public Int32 coolSetpoint`n        {`n            get;`n            set;`n        }`n        public string thermostatSetpointStatus`n        {`n            get;`n            set;`n        }`n        public string nextPeriodTime`n        {`n            get;`n            set;`n        }`n        public Int32 endHeatSetpoint`n        {`n            get;`n            set;`n        }`n        public Int32 endCoolSetpoint`n        {`n            get;`n            set;`n        }`n        public string heatCoolMode`n        {`n            get;`n            set;`n        }`n    }`n}"
+    Add-Type -TypeDefinition "namespace Results`n{`n    using System;`n    public class Status`n    {`n        public string ThermostatRequest`n        {`n            get;`n            set;`n        }`n        public string FanRequest`n        {`n            get;`n            set;`n        }`n    }`n}"
     $settings = [Thermostat.Settings]::new()
+    $results = [Results.Status]::New()
     $auth_token = get-honeywell_auth_token
     $uri = "https://api.honeywell.com/v2/devices/thermostats/$($HWDEVICE)?apikey=$($HWAPIKEY)&locationId=$($HWLOCID)"
     $Headers = [ordered]@{"Authorization"="Bearer $($auth_token)"}
@@ -147,6 +151,16 @@ function Set-Thermostat
         @(1..(32 - ("$($_):".Length))).ForEach({ write-host " " -NoNewLine})
         write-host "$($settings |% "$($_)")" -ForeGroundColor Yellow
     }
+    if($Fan)
+    {
+        Write-Host "fanMode:" -ForegroundColor Green -NoNewline
+        @(1..(32 - ("fanMode:".Length))).ForEach({ write-host " " -NoNewLine})
+        Write-Host "$($Fan)" -ForegroundColor Yellow
+        $fan_uri = "https://api.honeywell.com/v2/devices/thermostats/$($HWDEVICE)/fan?apikey=$($HWAPIKEY)&locationId=$($HWLOCID)"
+        $r = iwr -Method "POST" -Uri $fan_uri -Headers $Headers -ContentType "application/json" -Body "{`"mode`": `"$($Fan)`"}"
+        $results.fanRequest = $r.StatusDescription
+    }
     $r = iwr -Method "POST" -Uri $uri -Headers $Headers -ContentType "application/json" -Body $Body
-    return $r.StatusDescription
+    $results.thermostatRequest = $r.StatusDescription
+    return $results
 }
